@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script src="">
+        function addEvent(ele, type, handle) {
+            if (ele.addEventListener) { //主流浏览器
+                ele.addEventListener(type, handle, false); //捕获由父元素捕获到子元素，冒泡所有的都有    
+            } else if (ele.attachEvent) { //ie
+                ele['temp' + type + handle] = handle;
+                ele[type + handle] = function() { //先把函数保存下来 名字就是 temp + type + handle
+                    ele['temp' + type + handle].call(ele); //改变一下this的指向
+                }
+                ele.attachEvent('on' + type, ele[type + handle]); //添加绑定事件
+            } else {
+                ele['on' + type] = handle; //on 只能绑定一次 绑定多次进行覆盖
+            }
+        }
+
+        //解除事件绑定
+        function removeEvent(ele, type, handle) {
+            if (ele.removeEventListener) { //w3c 标准
+                ele.removeEventListener(type, handle, false); //是否事件捕获
+            } else if (ele.detachEvent) { //ie
+                ele.detachEvent('on' + type, handle);
+            } else {
+                ele['on' + type] = null;
+            }
+        }
+
+        //封装一下insertafter方法
+
+        document.getElementById("myList").insertBefore(newItem, existingItem);
+        insertBefore() //方法在你指定的已有节点之前 插入新的子节点。
+
+        Element.insertAfter = function(targetNode, afterNode) {
+            var nextSib = afterNode.nextElementSibling;
+            if (this.children.length <= 1 || !nextSib) {
+                this.appendChild(targetNode); //如果后面没有元素了 在父级添加子元素
+            } else {
+                this.insertbefore(targetNode, nextSib); //在下一个元素前边添加
+            }
+
+        }
+
+        //取消冒泡
+
+        function stopBubble(e) {
+            //如果提供了事件对象， 则这是一个非ie浏览器
+            if (e && e.stopPropagation) {
+                //因为它支持w3c的stopPropagation()方法
+                e.stopPropagation();
+            } else {
+                //否则，我们需要使用ie的方式取消事件冒泡
+                window.event.cancelBubble = true;
+            }
+        }
+
+        function cancelHandler(event) {
+            if (event.preventDefault) {
+                event.preventDefault();
+            } else if (event.returnValue) {
+                event.returnValue = false;
+            }
+        }
+        //   获取元素属性
+
+        function getStyle(obj, proStyle) {
+            if (obj.currentStyle) {
+                return obj.currentStyle[propStyle];
+            } else {
+                return window.getComputedStyle(obj, false)[propStyle];
+                //第二个参数 是看他 伪元素
+            }
+        }
+    </script>
+    <script>
+        //         • DOM的全称是Document Object Model 文档对象模型，DOM定义了表示和修改文档所需的对象、这些对象的行为和属性以及这些对象之间的关系。
+        // • DOM对象即为宿主对象，由浏览器厂商定义，用来操作html的css功能的一类对象和集合。不过浏览器厂商之间大部分都遵循w3c标准。
+        // • 简单来说，DOM就是用来操作html和css的，它是一系列对象的集合。
+
+        // 值得注意的是，在ie8以下的浏览器中，不区分大小写，而且标签的name属性也可以被当做id被选择出来。
+        // <div name="demo"></div>
+        // var div = document.getElementById('demo');
+
+        // / getElementsByClassName
+        // document.getElementsByClassName('class'); 获取到的是一个类数组，因为很多元素都可以有一个类名。我们可以通过[]的方式来选择到具体的哪一个元素。
+        // <div class="demo"></div>
+        // <div class="demo"></div>
+        // var div = document.getElementsByClassName('div')[1];
+        // 这样我们就可以选择到第二个div了。
+        // 不过如果我们碰到这种情况该怎么办？
+        // <div class="demo"></div>
+        // <div class="demo demo1"></div>
+        // <div class="demo1"></div>
+        // 我们改如何选择出来第二个div？
+        // 这里，我们的getElementsByClassName其实后面可以填写多个类名。
+        // var div = document.getElementsByClassName('demo demo1')[0];
+        // 这样，我们就可以选择出来第二个div了。
+        // 但是值得注意的是，ie8及以下的版本中没有这种方法。
+
+        // / querySelector()
+        //  /• querySelectorAll()
+        // 这两个方法通常放在一起说。
+        // 我们知道选择元素最强的是css，而这两个里面写的参数就是我们css选择器的写法。
+        // document.querySelector('div p #demo .demo);
+        // 不过querySelector永远选择一组里面的第一个，所以返回的不是一个类数组而是一个具体的元素。
+        // 而我们如果要返回一个类数组的集合的话，那么就用第二个querySelectorAll()方法。
+        // 不过这两个方法的问题在于，他们返回的不像前面四个是一个实时改变的元素，而是一个副本。当我们用这两个方法选择出来元素之后，我们把本身那个元素修改一下，会发现我们选择出来的那个元素没有变化。
+
+        // 实际删除的那个元素对用querySelector选择出来的那个副本没有影响。
+        // 不过，在ie7及以下的版本没有这两个方法。
+        // 我们以后提到的jQuery里面的选择器，虽然是基于Sizzle的，但是Sizzle是基于querySelector写的。
+
+
+        /• nodeName
+        这个属性可以返回元素的标签名， 以大写的形式表示， 只读， 不允许写入。
+        有几个特殊的节点返回的也不太一样：
+        文本节点– > #text
+        注释节点– > #comment
+        document节点– > #document
+
+        • nodeValue
+        Text节点或者Comment节点的文本内容， 可以读写
+
+        • attributes
+        把元素的行间属性都读取出来， 放到一个对象里面返回， 对象里面的每一个属性都是一个节点， 这个节点就是我们前面提到的属性节点。
+
+        注意： 对象里面的属性叫做property， 而元素里面的属性叫attributes， 实际应该叫特性。
+
+        节点还有一个方法
+        hasChildNodes() 可以检测是否有子节点
+
+
+
+
+
+        //遍历元素节点树
+        function retChild(node) {
+            var child = node.childNodes,
+                len = child.length;
+            for (var i = 0; i < len; i++) {
+                if (child[i].nodeType === 1) {
+                    console.log(child[i]);
+                    child[i].hasChildNodes() && retChild(i)
+                }
+            }
+        }
+        //封装函数 返回元素e的第n层父节点
+
+        function retParent(e, n) {
+            var n = n || 0;
+            if (n === 0) {
+                return e;
+            }
+            for (var i = 0; e && i < n; i++) {
+                e = e.parentNode;
+            }
+            return e;
+        }
+
+        //封装函数 返回元素的第n个兄弟节点，如果n为正，则返回后面的兄弟节点，如果n为负则返回前面的节点
+
+        function retSibling(e, n) {
+            var n = n || 0;
+            if (n === 0) {
+                return e;
+            }
+            while (e && n != 0) {
+                if (n > 0) {
+                    if (e.nextElementSibling) {
+                        e = e.nextElementSibling;
+                    } else {
+                        e = e.nextSibling;
+                        while (e && nodeType != 1) {
+                            e = e.nextSibling;
+                        }
+                    }
+                    n--;
+                } else {
+                    if (e.previousElementSibling) {
+                        e = e.previousElementSibling;
+                    } else {
+                        e = e.previousSibling;
+                        while (e && e.nodeType != 1) {
+                            e = e.previousSibling;
+                        }
+                    }
+                    n++;
+                }
+            }
+            return e;
+        }
+        //封装函数 实现children功能 最好在原型链上编程
+        Element.prototype.getChildren() {
+                var child = this.childrenNodes,
+                    len = child.length,
+                    obj = {
+                        'length': 0,
+                        'push': Array.prototype.push
+                    }
+                for (var i = 0; i < len; i++) {
+                    if (child[i].nodeType === 1) {
+                        obj.push(child[i]);
+                    }
+                }
+                return obj;
+            }
+            //封装 有元素节点的方法
+        Element.prototype.hasChildren = function() {
+            var child = this.childNodes,
+                len = child.length;
+            for (var i = 0; i < len; i)
+        }
+    </script>
+</body>
+
+</html>
